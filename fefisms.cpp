@@ -30,11 +30,9 @@ void fefisms::run() const
 {
   verbly::filter formFilter =
     (verbly::form::complexity == 1)
-    && (verbly::form::proper == false);
-
-  // Blacklist ethnic slurs
-  verbly::filter cleanFilter =
-    !(verbly::word::usageDomains %= (verbly::notion::wnid == 106718862));
+    && (verbly::form::proper == false)
+    // Blacklist slurs and slur homographys
+    && !(verbly::word::usageDomains %= (verbly::notion::wnid == 106717170));
 
   for (;;)
   {
@@ -58,15 +56,12 @@ void fefisms::run() const
     verbly::word noun = database_->words(
       (verbly::notion::partOfSpeech == verbly::part_of_speech::noun)
       && (verbly::word::forms(nounInfl) %= formFilter)
-      && cleanFilter
       && (verbly::notion::hyponyms %=
-        (verbly::word::forms(hypoInfl) %= formFilter)
-        && cleanFilter)).first();
+        (verbly::word::forms(hypoInfl) %= formFilter))).first();
 
     verbly::word hyponym = database_->words(
       (verbly::notion::partOfSpeech == verbly::part_of_speech::noun)
       && (verbly::notion::hypernyms %= noun)
-      && cleanFilter
       && (verbly::word::forms(hypoInfl) %= formFilter)).first();
 
     if (std::bernoulli_distribution(1.0/2.0)(rng_))
